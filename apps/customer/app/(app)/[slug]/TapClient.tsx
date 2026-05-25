@@ -143,36 +143,6 @@ function MerchantAvatar({ name }: { name: string }) {
   );
 }
 
-// ─── Reward overlay ───────────────────────────────────────────────────────────
-
-function RewardOverlay({
-  merchantName,
-  onDismiss,
-}: {
-  merchantName: string;
-  onDismiss: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 bg-indigo-600 flex flex-col items-center justify-center gap-6 px-8 text-center">
-      <span className="text-8xl" role="img" aria-label="Party popper">
-        🎉
-      </span>
-      <div>
-        <h2 className="text-3xl font-bold text-white">Reward unlocked!</h2>
-        <p className="text-indigo-200 mt-2">{merchantName}</p>
-      </div>
-      <p className="text-indigo-300 text-sm max-w-xs">
-        Show this screen to the cashier to claim your reward.
-      </p>
-      <button
-        onClick={onDismiss}
-        className="mt-2 bg-white text-indigo-600 font-semibold px-10 py-3.5 rounded-2xl hover:bg-indigo-50 transition-colors"
-      >
-        Done
-      </button>
-    </div>
-  );
-}
 
 // ─── Reward section ───────────────────────────────────────────────────────────
 
@@ -227,7 +197,6 @@ export default function TapClient({
   const [checking, setChecking] = useState(false);
   const [tapResult, setTapResult] = useState<TapResult>(null);
   const [resultVisible, setResultVisible] = useState(false);
-  const [showReward, setShowReward] = useState(false);
   const [pointsPop, setPointsPop] = useState<{ count: number; key: number } | null>(null);
 
   const rawProgress = currentPoints % campaign.reward_threshold;
@@ -263,7 +232,6 @@ export default function TapClient({
         setCurrentPoints(data.newBalance);
         setPointsPop({ count: data.pointsEarned, key: Date.now() });
         setTapResult({ kind: "success", data });
-        if (data.rewardUnlocked) setShowReward(true);
         fireConfetti();
       } else if (res.status === 429) {
         setTapResult({ kind: "rate-limited" });
@@ -285,12 +253,6 @@ export default function TapClient({
     }
   }
 
-  function dismissReward() {
-    setShowReward(false);
-    setTapResult(null);
-    setResultVisible(false);
-  }
-
   function handleResetCycle() {
     setCurrentPoints(0);
   }
@@ -304,10 +266,6 @@ export default function TapClient({
           to   { opacity: 0; transform: translateY(-40px); }
         }
       `}</style>
-
-      {showReward && (
-        <RewardOverlay merchantName={merchant.name} onDismiss={dismissReward} />
-      )}
 
       <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center px-6 pt-12 pb-24">
         <div className="w-full max-w-sm mx-auto flex flex-col items-center gap-10">
