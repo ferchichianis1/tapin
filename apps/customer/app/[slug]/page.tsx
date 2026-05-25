@@ -51,9 +51,11 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 function ProgressRing({
   progress,
   threshold,
+  animate,
 }: {
   progress: number;
   threshold: number;
+  animate: boolean;
 }) {
   const clamped = Math.min(progress, threshold);
   const fraction = threshold > 0 ? clamped / threshold : 0;
@@ -87,7 +89,7 @@ function ProgressRing({
           stroke="currentColor"
           strokeWidth={STROKE_WIDTH}
           strokeLinecap="round"
-          className="text-indigo-600 transition-all duration-700 ease-in-out"
+          className={`text-indigo-600 ${animate ? "transition-all duration-700 ease-in-out" : ""}`}
           style={{
             strokeDasharray: CIRCUMFERENCE,
             strokeDashoffset: offset,
@@ -159,11 +161,11 @@ export default function SlugPage({ params }: { params: { slug: string } }) {
   const router = useRouter();
 
   const [loadState, setLoadState] = useState<LoadState>({ status: "loading" });
-  const [currentPoints, setCurrentPoints] = useState(0);
   const [checking, setChecking] = useState(false);
   const [tapResult, setTapResult] = useState<TapResult>(null);
   const [resultVisible, setResultVisible] = useState(false);
   const [showReward, setShowReward] = useState(false);
+  const [animateRing, setAnimateRing] = useState(false);
 
   // ── Initial data load ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -225,7 +227,6 @@ export default function SlugPage({ params }: { params: { slug: string } }) {
         return;
       }
 
-      setCurrentPoints(balance);
       setLoadState({
         status: "ready",
         merchant: merchant as Merchant,
@@ -270,7 +271,12 @@ export default function SlugPage({ params }: { params: { slug: string } }) {
 
       if (res.ok) {
         const data = (await res.json()) as TapSuccessResponse;
-        setCurrentPoints(data.newBalance);
+        setLoadState((prev) =>
+          prev.status === "ready"
+            ? { ...prev, currentPoints: data.newBalance }
+            : prev
+        );
+        setAnimateRing(true);
         setTapResult({ kind: "success", data });
         if (data.rewardUnlocked) {
           setShowReward(true);
@@ -352,7 +358,7 @@ export default function SlugPage({ params }: { params: { slug: string } }) {
 
   // status === "ready"
   const { merchant, campaign } = loadState;
-  const progressInCycle = currentPoints % campaign.reward_threshold;
+  const progressInCycle = loadState.currentPoints % campaign.reward_threshold;
 
   return (
     <>
@@ -379,6 +385,7 @@ export default function SlugPage({ params }: { params: { slug: string } }) {
           <ProgressRing
             progress={progressInCycle}
             threshold={campaign.reward_threshold}
+            animate={animateRing}
           />
 
           {/* Check-in button */}
