@@ -30,6 +30,19 @@ type TapResult =
   | { kind: "error"; message: string }
   | null;
 
+// ─── Confetti ─────────────────────────────────────────────────────────────────
+
+async function fireConfetti() {
+  const { default: confetti } = await import("canvas-confetti");
+  confetti({
+    particleCount: 80,
+    spread: 60,
+    origin: { x: 0.5, y: 0.5 },
+    colors: ["#4F46E5", "#B8860B", "#ffffff"],
+    ticks: 120,
+  });
+}
+
 // ─── Ring ─────────────────────────────────────────────────────────────────────
 
 const RADIUS = 82;
@@ -41,10 +54,14 @@ function ProgressRing({
   progress,
   threshold,
   rewardLabel,
+  pointsPop,
+  onPopEnd,
 }: {
   progress: number;
   threshold: number;
   rewardLabel: string;
+  pointsPop: { count: number; key: number } | null;
+  onPopEnd: () => void;
 }) {
   const clamped = Math.min(progress, threshold);
   const offset = C * (1 - (threshold > 0 ? clamped / threshold : 0));
@@ -59,6 +76,7 @@ function ProgressRing({
           className="-rotate-90"
           aria-hidden="true"
         >
+          {/* Track */}
           <circle
             cx={SIZE / 2}
             cy={SIZE / 2}
@@ -67,6 +85,7 @@ function ProgressRing({
             stroke="#e7e5e4"
             strokeWidth={STROKE}
           />
+          {/* Fill */}
           <circle
             cx={SIZE / 2}
             cy={SIZE / 2}
@@ -75,18 +94,35 @@ function ProgressRing({
             stroke="#4f46e5"
             strokeWidth={STROKE}
             strokeLinecap="round"
-            strokeDasharray={C}
-            strokeDashoffset={offset}
-            className="transition-all duration-700 ease-in-out"
+            style={{
+              strokeDasharray: C,
+              strokeDashoffset: offset,
+              transition: "stroke-dashoffset 0.8s ease-out",
+            }}
           />
         </svg>
 
+        {/* Count */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-5xl font-bold tracking-tight text-stone-900 leading-none">
             {clamped}
           </span>
           <span className="text-sm text-stone-400 mt-2">of {threshold}</span>
         </div>
+
+        {/* Points pop — floats upward from the ring center */}
+        {pointsPop && (
+          <div
+            key={pointsPop.key}
+            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            style={{ animation: "tapinFloatUp 1.5s ease-out forwards" }}
+            onAnimationEnd={onPopEnd}
+          >
+            <span className="text-2xl font-bold text-indigo-600">
+              +{pointsPop.count}
+            </span>
+          </div>
+        )}
       </div>
 
       <p className="text-sm text-stone-400 text-center">
@@ -154,6 +190,7 @@ export default function TapClient({
   const [tapResult, setTapResult] = useState<TapResult>(null);
   const [resultVisible, setResultVisible] = useState(false);
   const [showReward, setShowReward] = useState(false);
+  const [pointsPop, setPointsPop] = useState<{ count: number; key: number } | null>(null);
 
   const progressInCycle = currentPoints % campaign.reward_threshold;
 
@@ -182,8 +219,10 @@ export default function TapClient({
       if (res.ok) {
         const data = (await res.json()) as TapSuccessResponse;
         setCurrentPoints(data.newBalance);
+        setPointsPop({ count: data.pointsEarned, key: Date.now() });
         setTapResult({ kind: "success", data });
         if (data.rewardUnlocked) setShowReward(true);
+        fireConfetti();
       } else if (res.status === 429) {
         setTapResult({ kind: "rate-limited" });
       } else {
@@ -212,6 +251,14 @@ export default function TapClient({
 
   return (
     <>
+      {/* Keyframe for the +N float-up animation */}
+      <style>{`
+        @keyframes tapinFloatUp {
+          from { opacity: 1; transform: translateY(0); }
+          to   { opacity: 0; transform: translateY(-40px); }
+        }
+      `}</style>
+
       {showReward && (
         <RewardOverlay merchantName={merchant.name} onDismiss={dismissReward} />
       )}
@@ -242,6 +289,8 @@ export default function TapClient({
             progress={progressInCycle}
             threshold={campaign.reward_threshold}
             rewardLabel={campaign.reward_label}
+            pointsPop={pointsPop}
+            onPopEnd={() => setPointsPop(null)}
           />
 
           {/* Action */}
@@ -263,7 +312,7 @@ export default function TapClient({
                 >
                   {tapResult.kind === "success" && (
                     <p className="text-sm font-medium text-emerald-600">
-                      Visit logged — {tapResult.data.progressMessage}
+                      Visit recorded ✓
                     </p>
                   )}
                   {tapResult.kind === "rate-limited" && (
