@@ -27,7 +27,7 @@ function StoreCard({ card }: { card: MerchantCard }) {
   return (
     <Link
       href={`/${card.slug}`}
-      className="block bg-white rounded-2xl border border-stone-100 p-5 cursor-pointer hover:bg-stone-50 hover:border-stone-200 transition-colors duration-150"
+      className="block bg-white rounded-2xl border border-stone-100 p-5 cursor-pointer transition-all duration-150 ease-out hover:scale-[1.01] hover:shadow-sm active:scale-[0.98] active:shadow-none"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
