@@ -94,7 +94,14 @@ export default async function MePage() {
       }
     }
 
-    cards = Array.from(merchantMap.values());
+    cards = Array.from(merchantMap.values()).map((card) => {
+      const visitsNeeded = Math.ceil(card.rewardThreshold / Math.max(card.pointsPerVisit, 1));
+      const raw = card.visitCount % visitsNeeded;
+      return {
+        ...card,
+        visitCount: raw === 0 && card.visitCount > 0 ? visitsNeeded : raw,
+      };
+    });
   }
 
   return <MeClient email={user.email ?? ""} cards={cards} />;

@@ -309,7 +309,7 @@ export default function TapClient({
         <RewardOverlay merchantName={merchant.name} onDismiss={dismissReward} />
       )}
 
-      <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center px-6 py-12">
+      <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center px-6 pt-12 pb-24">
         <div className="w-full max-w-sm mx-auto flex flex-col items-center gap-10">
 
           {/* Merchant */}
