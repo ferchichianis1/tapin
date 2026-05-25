@@ -83,10 +83,10 @@ export default async function SlugPage({
     );
   }
 
-  // ── Customer points balance + streak ─────────────────────────────────────
+  // ── Customer visit count + streak ────────────────────────────────────────
   const { data: customer } = await supabaseAdmin
     .from("customers")
-    .select("id, points_balance")
+    .select("id")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -94,17 +94,28 @@ export default async function SlugPage({
     ? `${slug.slice(0, 6).toUpperCase()} · ${customer.id.slice(0, 6).toUpperCase()}`
     : "";
 
+  let initialPoints = 0;
   let streakCount = 0;
+
   if (customer) {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const { count } = await supabaseAdmin
-      .from("visits")
-      .select("id", { count: "exact", head: true })
-      .eq("customer_id", customer.id)
-      .eq("campaign_id", campaign.id)
-      .eq("rejected", false)
-      .gte("created_at", sevenDaysAgo);
-    streakCount = count ?? 0;
+    const [{ count: totalCount }, { count: weekCount }] = await Promise.all([
+      supabaseAdmin
+        .from("visits")
+        .select("id", { count: "exact", head: true })
+        .eq("customer_id", customer.id)
+        .eq("campaign_id", campaign.id)
+        .eq("rejected", false),
+      supabaseAdmin
+        .from("visits")
+        .select("id", { count: "exact", head: true })
+        .eq("customer_id", customer.id)
+        .eq("campaign_id", campaign.id)
+        .eq("rejected", false)
+        .gte("created_at", sevenDaysAgo),
+    ]);
+    initialPoints = totalCount ?? 0;
+    streakCount = weekCount ?? 0;
   }
 
   return (
@@ -120,7 +131,7 @@ export default async function SlugPage({
         points_per_visit: campaign.points_per_visit,
         reward_label: campaign.reward_label,
       }}
-      initialPoints={customer?.points_balance ?? 0}
+      initialPoints={initialPoints}
       streakCount={streakCount}
       rewardCode={rewardCode}
     />
