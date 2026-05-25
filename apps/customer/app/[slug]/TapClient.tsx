@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -15,6 +15,7 @@ export interface TapClientProps {
   };
   initialPoints: number;
   streakCount: number;
+  customerId: string | null;
 }
 
 interface TapSuccessResponse {
@@ -170,6 +171,37 @@ function RewardOverlay({
   );
 }
 
+// ─── Visit timeline ───────────────────────────────────────────────────────────
+
+function relativeDate(iso: string): string {
+  const diffDays = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 14) return "Last week";
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+  return "A while ago";
+}
+
+function VisitTimeline({ dates }: { dates: string[] }) {
+  if (dates.length === 0) return null;
+  return (
+    <div className="w-full">
+      <p className="text-[10px] font-semibold tracking-[0.15em] text-stone-400 uppercase mb-2">
+        Your Visits
+      </p>
+      <div className="space-y-2">
+        {dates.map((d, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-stone-300 shrink-0" />
+            <span className="text-xs text-stone-400">{relativeDate(d)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function TapClient({
@@ -178,6 +210,7 @@ export default function TapClient({
   campaign,
   initialPoints,
   streakCount,
+  customerId,
 }: TapClientProps) {
   const [currentPoints, setCurrentPoints] = useState(initialPoints);
   const [checking, setChecking] = useState(false);
@@ -185,6 +218,22 @@ export default function TapClient({
   const [resultVisible, setResultVisible] = useState(false);
   const [showReward, setShowReward] = useState(false);
   const [pointsPop, setPointsPop] = useState<{ count: number; key: number } | null>(null);
+  const [recentVisits, setRecentVisits] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!customerId) return;
+    supabase
+      .from("visits")
+      .select("created_at, nfc_codes!inner(merchant_id)")
+      .eq("customer_id", customerId)
+      .eq("nfc_codes.merchant_id", merchant.id)
+      .eq("rejected", false)
+      .order("created_at", { ascending: false })
+      .limit(5)
+      .then(({ data }) => {
+        if (data) setRecentVisits(data.map((v: { created_at: string }) => v.created_at));
+      });
+  }, [customerId, merchant.id]);
 
   const progressInCycle = currentPoints % campaign.reward_threshold;
   const visitsRemaining = campaign.reward_threshold - progressInCycle;
@@ -299,6 +348,9 @@ export default function TapClient({
                 : `${visitsRemaining} more visits for your ${campaign.reward_label}`}
             </div>
           )}
+
+          {/* Visit timeline */}
+          <VisitTimeline dates={recentVisits} />
 
           {/* Action */}
           <div className="w-full space-y-3">

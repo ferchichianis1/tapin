@@ -118,6 +118,7 @@ export default async function SlugPage({
       }}
       initialPoints={customer?.points_balance ?? 0}
       streakCount={streakCount}
+      customerId={customer?.id ?? null}
     />
   );
 }
