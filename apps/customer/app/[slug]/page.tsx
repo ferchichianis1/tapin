@@ -83,12 +83,25 @@ export default async function SlugPage({
     );
   }
 
-  // ── Customer points balance ───────────────────────────────────────────────
+  // ── Customer points balance + streak ─────────────────────────────────────
   const { data: customer } = await supabaseAdmin
     .from("customers")
-    .select("points_balance")
+    .select("id, points_balance")
     .eq("user_id", user.id)
     .maybeSingle();
+
+  let streakCount = 0;
+  if (customer) {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { count } = await supabaseAdmin
+      .from("visits")
+      .select("id, nfc_codes!inner(merchant_id)", { count: "exact", head: true })
+      .eq("customer_id", customer.id)
+      .eq("nfc_codes.merchant_id", merchant.id)
+      .eq("rejected", false)
+      .gte("created_at", sevenDaysAgo);
+    streakCount = count ?? 0;
+  }
 
   return (
     <TapClient
@@ -104,6 +117,7 @@ export default async function SlugPage({
         reward_label: campaign.reward_label,
       }}
       initialPoints={customer?.points_balance ?? 0}
+      streakCount={streakCount}
     />
   );
 }

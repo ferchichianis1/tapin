@@ -14,6 +14,7 @@ export interface TapClientProps {
     reward_label: string;
   };
   initialPoints: number;
+  streakCount: number;
 }
 
 interface TapSuccessResponse {
@@ -146,6 +147,7 @@ export default function TapClient({
   merchant,
   campaign,
   initialPoints,
+  streakCount,
 }: TapClientProps) {
   const [currentPoints, setCurrentPoints] = useState(initialPoints);
   const [checking, setChecking] = useState(false);
@@ -224,6 +226,16 @@ export default function TapClient({
               {merchant.name}
             </h1>
           </div>
+
+          {/* Streak nudge */}
+          {streakCount >= 1 && (
+            <p className="text-sm text-stone-500 text-center">
+              🔥{" "}
+              {streakCount === 1
+                ? "1 visit this week — keep it up!"
+                : `${streakCount} visits this week`}
+            </p>
+          )}
 
           {/* Ring */}
           <ProgressRing
