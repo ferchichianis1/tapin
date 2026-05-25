@@ -320,8 +320,28 @@ export default function SlugPage({ params }: { params: { slug: string } }) {
 
   if (loadState.status === "loading") {
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center">
-        <div className="w-12 h-12 rounded-full border-4 border-zinc-200 dark:border-zinc-700 border-t-indigo-600 animate-spin" />
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center px-4 py-12">
+        <div className="w-full max-w-sm mx-auto flex flex-col items-center gap-8 animate-pulse">
+
+          {/* Merchant header skeleton */}
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-16 h-16 rounded-2xl bg-zinc-200 dark:bg-zinc-700" />
+            <div className="h-7 w-40 rounded-lg bg-zinc-200 dark:bg-zinc-700" />
+          </div>
+
+          {/* Ring skeleton — matches the 180×180 SVG + label below it */}
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-[180px] h-[180px] rounded-full bg-zinc-200 dark:bg-zinc-700" />
+            <div className="h-4 w-32 rounded bg-zinc-200 dark:bg-zinc-700 mt-2" />
+          </div>
+
+          {/* Button skeleton */}
+          <div className="w-full h-14 rounded-xl bg-zinc-200 dark:bg-zinc-700" />
+
+          {/* Result area skeleton — preserves min-height to prevent shift */}
+          <div className="w-full min-h-[3rem]" />
+
+        </div>
       </div>
     );
   }
