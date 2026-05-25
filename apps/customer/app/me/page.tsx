@@ -188,7 +188,7 @@ export default function MePage() {
       // Aggregate per merchant
       const merchantMap = new Map<string, MerchantCard>();
 
-      for (const raw of (rawVisits ?? []) as RawVisit[]) {
+      for (const raw of (rawVisits ?? []) as unknown as RawVisit[]) {
         const c = raw.campaigns;
         if (!c?.merchants) continue;
 
