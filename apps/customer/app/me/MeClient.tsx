@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import BottomNav from "@/components/BottomNav";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -75,26 +75,15 @@ export default function MeClient({
     setGreeting(h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening");
   }, []);
 
-  async function handleSignOut() {
-    await supabase.auth.signOut();
-    window.location.href = "/auth";
-  }
-
   return (
     <div className="min-h-screen bg-stone-50">
 
       {/* Header */}
       <header className="px-6 pt-14 pb-8">
-        <div className="flex items-center justify-between">
+        <div>
           <span className="text-xs font-medium tracking-[0.2em] text-[#B8860B] uppercase">
             TapIn
           </span>
-          <button
-            onClick={handleSignOut}
-            className="text-xs text-stone-400 hover:text-stone-600 transition-colors"
-          >
-            Sign out
-          </button>
         </div>
 
         <div className="mt-10">
@@ -106,7 +95,7 @@ export default function MeClient({
       </header>
 
       {/* Store list */}
-      <main className="px-6 pb-16">
+      <main className="px-6 pb-24">
         <p className="text-xs font-semibold tracking-[0.15em] text-stone-400 uppercase mb-5">
           Your Stores
         </p>
@@ -129,6 +118,8 @@ export default function MeClient({
           </div>
         )}
       </main>
+
+      <BottomNav active="home" />
 
     </div>
   );
