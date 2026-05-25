@@ -21,18 +21,12 @@ export default function AuthPage() {
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
     });
 
     setLoading(false);
-
-    if (error) {
-      setError(error.message);
-    } else {
-      setSent(true);
-    }
+    if (error) setError(error.message);
+    else setSent(true);
   }
 
   async function handleDevLogin(e: React.FormEvent) {
@@ -54,67 +48,71 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center px-4">
-      <div className="w-full max-w-sm mx-auto space-y-4">
+    <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center px-6">
+      <div className="w-full max-w-sm mx-auto">
 
-        {/* Magic link */}
-        <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-8">
-          {sent ? (
-            <div className="text-center">
-              <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
-                Check your email
-              </h1>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                We sent a magic link to{" "}
-                <span className="font-medium text-zinc-700 dark:text-zinc-300">{email}</span>.
-              </p>
-            </div>
-          ) : (
-            <>
-              <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mb-6">
-                Sign in to TapIn
-              </h1>
-              <form onSubmit={handleMagicLink} className="space-y-4">
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
-                    Email address
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400"
-                  />
-                </div>
-                {error && <p className="text-sm text-red-600">{error}</p>}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {loading ? "Sending…" : "Send magic link"}
-                </button>
-              </form>
-            </>
-          )}
-        </div>
+        {/* Brand */}
+        <p className="text-xs font-medium tracking-[0.25em] text-stone-300 uppercase text-center mb-16">
+          TapIn
+        </p>
+
+        {/* Main auth block */}
+        {sent ? (
+          <div>
+            <h1 className="text-3xl font-bold text-stone-900 mb-3">
+              Check your inbox.
+            </h1>
+            <p className="text-stone-400 text-sm leading-relaxed">
+              We sent a sign-in link to{" "}
+              <span className="text-stone-600 font-medium">{email}</span>.
+              <br />
+              Click it to continue.
+            </p>
+          </div>
+        ) : (
+          <div>
+            <h1 className="text-3xl font-bold text-stone-900 mb-2">
+              Welcome to TapIn.
+            </h1>
+            <p className="text-stone-400 text-sm mb-8">
+              Enter your email to receive a sign-in link.
+            </p>
+
+            <form onSubmit={handleMagicLink} className="space-y-3">
+              <input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com"
+                className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3.5 text-sm text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+              />
+              {error && <p className="text-sm text-red-500">{error}</p>}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-medium py-3.5 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? "Sending…" : "Send sign-in link"}
+              </button>
+            </form>
+          </div>
+        )}
 
         {/* Dev login */}
-        <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-8">
-          <h2 className="text-sm font-semibold text-zinc-500 dark:text-zinc-400 mb-4 uppercase tracking-wide">
-            Dev login (password)
-          </h2>
-          <form onSubmit={handleDevLogin} className="space-y-3">
+        <div className="mt-14 pt-8 border-t border-stone-100">
+          <p className="text-xs font-medium tracking-[0.15em] text-stone-300 uppercase mb-4">
+            Dev access
+          </p>
+          <form onSubmit={handleDevLogin} className="space-y-2">
             <input
               type="email"
               required
               value={devEmail}
               onChange={(e) => setDevEmail(e.target.value)}
-              placeholder="customer@tapin.app"
-              className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400"
+              placeholder="Email"
+              className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
             />
             <input
               type="password"
@@ -122,13 +120,13 @@ export default function AuthPage() {
               value={devPassword}
               onChange={(e) => setDevPassword(e.target.value)}
               placeholder="Password"
-              className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400"
+              className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
             />
-            {devError && <p className="text-sm text-red-600">{devError}</p>}
+            {devError && <p className="text-sm text-red-500">{devError}</p>}
             <button
               type="submit"
               disabled={devLoading}
-              className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {devLoading ? "Signing in…" : "Sign in"}
             </button>

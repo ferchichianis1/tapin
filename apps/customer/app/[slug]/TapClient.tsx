@@ -8,7 +8,11 @@ import { supabase } from "@/lib/supabase";
 export interface TapClientProps {
   slug: string;
   merchant: { id: string; name: string; logo_url: string | null };
-  campaign: { reward_threshold: number; points_per_visit: number };
+  campaign: {
+    reward_threshold: number;
+    points_per_visit: number;
+    reward_label: string;
+  };
   initialPoints: number;
 }
 
@@ -25,82 +29,86 @@ type TapResult =
   | { kind: "error"; message: string }
   | null;
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// ─── Ring ─────────────────────────────────────────────────────────────────────
 
-const RADIUS = 80;
-const STROKE_WIDTH = 12;
-const SIZE = 180;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
+const RADIUS = 82;
+const STROKE = 5;
+const SIZE = 200;
+const C = 2 * Math.PI * RADIUS;
 
 function ProgressRing({
   progress,
   threshold,
+  rewardLabel,
 }: {
   progress: number;
   threshold: number;
+  rewardLabel: string;
 }) {
   const clamped = Math.min(progress, threshold);
-  const fraction = threshold > 0 ? clamped / threshold : 0;
-  const offset = CIRCUMFERENCE * (1 - fraction);
+  const offset = C * (1 - (threshold > 0 ? clamped / threshold : 0));
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <svg
-        width={SIZE}
-        height={SIZE}
-        viewBox={`0 0 ${SIZE} ${SIZE}`}
-        className="-rotate-90"
-        aria-hidden="true"
-      >
-        <circle
-          cx={SIZE / 2}
-          cy={SIZE / 2}
-          r={RADIUS}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={STROKE_WIDTH}
-          className="text-zinc-200 dark:text-zinc-700"
-        />
-        <circle
-          cx={SIZE / 2}
-          cy={SIZE / 2}
-          r={RADIUS}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={STROKE_WIDTH}
-          strokeLinecap="round"
-          className="text-indigo-600 transition-all duration-700 ease-in-out"
-          style={{
-            strokeDasharray: CIRCUMFERENCE,
-            strokeDashoffset: offset,
-          }}
-        />
-      </svg>
+    <div className="flex flex-col items-center gap-3">
+      <div className="relative" style={{ width: SIZE, height: SIZE }}>
+        <svg
+          width={SIZE}
+          height={SIZE}
+          viewBox={`0 0 ${SIZE} ${SIZE}`}
+          className="-rotate-90"
+          aria-hidden="true"
+        >
+          <circle
+            cx={SIZE / 2}
+            cy={SIZE / 2}
+            r={RADIUS}
+            fill="none"
+            stroke="#e7e5e4"
+            strokeWidth={STROKE}
+          />
+          <circle
+            cx={SIZE / 2}
+            cy={SIZE / 2}
+            r={RADIUS}
+            fill="none"
+            stroke="#4f46e5"
+            strokeWidth={STROKE}
+            strokeLinecap="round"
+            strokeDasharray={C}
+            strokeDashoffset={offset}
+            className="transition-all duration-700 ease-in-out"
+          />
+        </svg>
 
-      <div className="flex flex-col items-center -mt-[calc(180px/2+1.5rem)] h-[180px] justify-center pointer-events-none select-none">
-        <span className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
-          {clamped} / {threshold}
-        </span>
-        <span className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-          visits to reward
-        </span>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-5xl font-bold tracking-tight text-stone-900 leading-none">
+            {clamped}
+          </span>
+          <span className="text-sm text-stone-400 mt-2">of {threshold}</span>
+        </div>
       </div>
+
+      <p className="text-sm text-stone-400 text-center">
+        visits to your free{" "}
+        <span className="text-stone-600 font-medium">{rewardLabel}</span>
+      </p>
     </div>
   );
 }
 
+// ─── Avatar ───────────────────────────────────────────────────────────────────
+
 function MerchantAvatar({ name }: { name: string }) {
-  const initial = name.trim().charAt(0).toUpperCase();
   return (
-    <div className="w-16 h-16 rounded-2xl bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
-      <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-300">
-        {initial}
+    <div className="w-20 h-20 rounded-2xl bg-stone-100 flex items-center justify-center">
+      <span className="text-3xl font-semibold text-stone-900">
+        {name.trim().charAt(0).toUpperCase()}
       </span>
     </div>
   );
 }
+
+// ─── Reward overlay ───────────────────────────────────────────────────────────
 
 function RewardOverlay({
   merchantName,
@@ -110,18 +118,20 @@ function RewardOverlay({
   onDismiss: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 bg-indigo-600 flex flex-col items-center justify-center gap-6 px-6 text-center">
-      <span className="text-7xl" role="img" aria-label="Party popper">
+    <div className="fixed inset-0 z-50 bg-indigo-600 flex flex-col items-center justify-center gap-6 px-8 text-center">
+      <span className="text-8xl" role="img" aria-label="Party popper">
         🎉
       </span>
-      <h2 className="text-3xl font-bold text-white">Reward unlocked!</h2>
-      <p className="text-indigo-100 text-lg font-medium">{merchantName}</p>
-      <p className="text-indigo-200 text-sm max-w-xs">
-        Show this screen to claim your reward
+      <div>
+        <h2 className="text-3xl font-bold text-white">Reward unlocked!</h2>
+        <p className="text-indigo-200 mt-2">{merchantName}</p>
+      </div>
+      <p className="text-indigo-300 text-sm max-w-xs">
+        Show this screen to the cashier to claim your reward.
       </p>
       <button
         onClick={onDismiss}
-        className="mt-4 bg-white text-indigo-600 font-semibold px-8 py-3 rounded-xl hover:bg-indigo-50 transition-colors"
+        className="mt-2 bg-white text-indigo-600 font-semibold px-10 py-3.5 rounded-2xl hover:bg-indigo-50 transition-colors"
       >
         Done
       </button>
@@ -129,7 +139,7 @@ function RewardOverlay({
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function TapClient({
   slug,
@@ -180,7 +190,7 @@ export default function TapClient({
           const errBody = (await res.json()) as { error?: string };
           if (errBody.error) message = errBody.error;
         } catch {
-          // ignore JSON parse failure
+          // ignore
         }
         setTapResult({ kind: "error", message });
       }
@@ -188,9 +198,7 @@ export default function TapClient({
       setTapResult({ kind: "error", message: "Network error. Please try again." });
     } finally {
       setChecking(false);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => setResultVisible(true));
-      });
+      requestAnimationFrame(() => requestAnimationFrame(() => setResultVisible(true)));
     }
   }
 
@@ -206,63 +214,57 @@ export default function TapClient({
         <RewardOverlay merchantName={merchant.name} onDismiss={dismissReward} />
       )}
 
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center px-4 py-12">
-        <div className="w-full max-w-sm mx-auto flex flex-col items-center gap-8">
+      <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center px-6 py-12">
+        <div className="w-full max-w-sm mx-auto flex flex-col items-center gap-10">
 
-          {/* Merchant header */}
-          <div className="flex flex-col items-center gap-3">
+          {/* Merchant */}
+          <div className="flex flex-col items-center gap-4">
             <MerchantAvatar name={merchant.name} />
-            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 text-center">
+            <h1 className="text-3xl font-semibold text-stone-900 text-center">
               {merchant.name}
             </h1>
           </div>
 
-          {/* Progress ring */}
+          {/* Ring */}
           <ProgressRing
             progress={progressInCycle}
             threshold={campaign.reward_threshold}
+            rewardLabel={campaign.reward_label}
           />
 
-          {/* Check-in button */}
-          <button
-            onClick={handleCheckIn}
-            disabled={checking}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 rounded-xl text-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {checking ? "Checking in…" : "Check in"}
-          </button>
+          {/* Action */}
+          <div className="w-full space-y-3">
+            <button
+              onClick={handleCheckIn}
+              disabled={checking}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-medium py-5 rounded-2xl text-base transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {checking ? "Checking in…" : "Check in"}
+            </button>
 
-          {/* Tap result — min-height prevents layout jump */}
-          <div className="w-full min-h-[3rem] flex flex-col items-center justify-center gap-1 text-center">
-            {tapResult !== null && (
-              <div
-                className={`transition-opacity duration-300 ${
-                  resultVisible ? "opacity-100" : "opacity-0"
-                }`}
-              >
-                {tapResult.kind === "success" && (
-                  <>
-                    <p className="text-emerald-600 font-semibold text-base">
-                      +{tapResult.data.pointsEarned} point
-                      {tapResult.data.pointsEarned !== 1 ? "s" : ""}
+            <div className="min-h-[1.75rem] flex items-center justify-center">
+              {tapResult !== null && (
+                <div
+                  className={`text-center transition-opacity duration-300 ${
+                    resultVisible ? "opacity-100" : "opacity-0"
+                  }`}
+                >
+                  {tapResult.kind === "success" && (
+                    <p className="text-sm font-medium text-emerald-600">
+                      Visit logged — {tapResult.data.progressMessage}
                     </p>
-                    <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-0.5">
-                      {tapResult.data.progressMessage}
+                  )}
+                  {tapResult.kind === "rate-limited" && (
+                    <p className="text-sm text-stone-400">
+                      Already checked in — come back later
                     </p>
-                  </>
-                )}
-                {tapResult.kind === "rate-limited" && (
-                  <p className="text-amber-600 font-medium text-sm">
-                    Already checked in — come back later
-                  </p>
-                )}
-                {tapResult.kind === "error" && (
-                  <p className="text-red-600 font-medium text-sm">
-                    {tapResult.message}
-                  </p>
-                )}
-              </div>
-            )}
+                  )}
+                  {tapResult.kind === "error" && (
+                    <p className="text-sm text-red-500">{tapResult.message}</p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
         </div>

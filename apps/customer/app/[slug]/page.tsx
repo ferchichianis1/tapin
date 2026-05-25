@@ -43,12 +43,12 @@ export default async function SlugPage({
 
   if (!merchant) {
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center px-4">
         <div className="text-center">
-          <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
+          <h1 className="text-xl font-semibold text-stone-900 mb-2">
             Shop not found
           </h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="text-sm text-stone-500">
             This link doesn&apos;t match any store in our system.
           </p>
         </div>
@@ -60,7 +60,7 @@ export default async function SlugPage({
   const now = new Date().toISOString();
   const { data: campaign } = await supabaseAdmin
     .from("campaigns")
-    .select("reward_threshold, points_per_visit")
+    .select("reward_threshold, points_per_visit, reward_label")
     .eq("merchant_id", merchant.id)
     .eq("is_active", true)
     .lte("starts_at", now)
@@ -70,12 +70,12 @@ export default async function SlugPage({
 
   if (!campaign) {
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center px-4">
         <div className="text-center">
-          <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
+          <h1 className="text-xl font-semibold text-stone-900 mb-2">
             No active campaign
           </h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="text-sm text-stone-500">
             This store doesn&apos;t have an active loyalty campaign right now.
           </p>
         </div>
@@ -101,6 +101,7 @@ export default async function SlugPage({
       campaign={{
         reward_threshold: campaign.reward_threshold,
         points_per_visit: campaign.points_per_visit,
+        reward_label: campaign.reward_label,
       }}
       initialPoints={customer?.points_balance ?? 0}
     />
