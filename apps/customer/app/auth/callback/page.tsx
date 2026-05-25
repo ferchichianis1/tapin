@@ -1,19 +1,16 @@
 "use client";
 import { useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
 
 export default function AuthCallback() {
   useEffect(() => {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-    supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
         window.location.href = "/me";
       }
     });
+    return () => subscription.unsubscribe();
   }, []);
 
-  return <p style={{padding: 40, color: "white"}}>Signing you in...</p>;
+  return <p style={{ padding: 40, color: "white" }}>Signing you in...</p>;
 }
