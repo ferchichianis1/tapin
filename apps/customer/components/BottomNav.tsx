@@ -1,6 +1,7 @@
-import Link from "next/link";
+"use client";
 
-type Tab = "home" | "explore" | "profile";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 function HomeIcon() {
   return (
@@ -29,7 +30,9 @@ function ProfileIcon() {
   );
 }
 
-export default function BottomNav({ active }: { active: Tab }) {
+export default function BottomNav() {
+  const pathname = usePathname();
+  const active = pathname.startsWith("/profile") ? "profile" : "home";
   const activeClass = "text-indigo-600";
   const inactiveClass = "text-stone-300";
 

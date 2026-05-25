@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import BottomNav from "@/components/BottomNav";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -95,7 +94,7 @@ export default function MeClient({
       </header>
 
       {/* Store list */}
-      <main className="px-6 pb-24">
+      <main className="px-6 pb-6">
         <p className="text-xs font-semibold tracking-[0.15em] text-stone-400 uppercase mb-5">
           Your Stores
         </p>
@@ -118,8 +117,6 @@ export default function MeClient({
           </div>
         )}
       </main>
-
-      <BottomNav active="home" />
 
     </div>
   );

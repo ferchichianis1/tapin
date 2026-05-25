@@ -1,7 +1,6 @@
 "use client";
 
 import { supabase } from "@/lib/supabase";
-import BottomNav from "@/components/BottomNav";
 
 export interface ProfileStats {
   totalVisits: number;
@@ -24,7 +23,7 @@ export default function ProfileClient({
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 pb-24">
+    <div className="min-h-screen bg-stone-50">
 
       {/* Header */}
       <header className="px-6 pt-14 pb-8">
@@ -76,7 +75,6 @@ export default function ProfileClient({
 
       </main>
 
-      <BottomNav active="profile" />
     </div>
   );
 }
