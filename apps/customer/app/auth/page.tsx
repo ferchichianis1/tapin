@@ -52,7 +52,7 @@ export default function AuthPage() {
       <div className="w-full max-w-sm mx-auto">
 
         {/* Brand */}
-        <p className="text-xs font-medium tracking-[0.25em] text-stone-300 uppercase text-center mb-16">
+        <p className="text-xs font-medium tracking-[0.25em] text-[#B8860B] uppercase text-center mb-16">
           TapIn
         </p>
 
