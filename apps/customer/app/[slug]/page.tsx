@@ -60,7 +60,7 @@ export default async function SlugPage({
   const now = new Date().toISOString();
   const { data: campaign } = await supabaseAdmin
     .from("campaigns")
-    .select("id, reward_threshold, points_per_visit, reward_label")
+    .select("reward_threshold, points_per_visit, reward_label")
     .eq("merchant_id", merchant.id)
     .eq("is_active", true)
     .lte("starts_at", now)
@@ -90,29 +90,21 @@ export default async function SlugPage({
     .eq("user_id", user.id)
     .maybeSingle();
 
+  const rewardCode = customer
+    ? `${slug.slice(0, 6).toUpperCase()} · ${customer.id.slice(0, 6).toUpperCase()}`
+    : "";
+
   let streakCount = 0;
-  let recentVisits: string[] = [];
   if (customer) {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const [{ count }, { data: visitRows }] = await Promise.all([
-      supabaseAdmin
-        .from("visits")
-        .select("id, nfc_codes!inner(merchant_id)", { count: "exact", head: true })
-        .eq("customer_id", customer.id)
-        .eq("nfc_codes.merchant_id", merchant.id)
-        .eq("rejected", false)
-        .gte("created_at", sevenDaysAgo),
-      supabaseAdmin
-        .from("visits")
-        .select("created_at")
-        .eq("customer_id", customer.id)
-        .eq("campaign_id", campaign.id)
-        .eq("rejected", false)
-        .order("created_at", { ascending: false })
-        .limit(5),
-    ]);
+    const { count } = await supabaseAdmin
+      .from("visits")
+      .select("id, nfc_codes!inner(merchant_id)", { count: "exact", head: true })
+      .eq("customer_id", customer.id)
+      .eq("nfc_codes.merchant_id", merchant.id)
+      .eq("rejected", false)
+      .gte("created_at", sevenDaysAgo);
     streakCount = count ?? 0;
-    recentVisits = (visitRows ?? []).map((v) => v.created_at as string);
   }
 
   return (
@@ -124,14 +116,13 @@ export default async function SlugPage({
         logo_url: merchant.logo_url ?? null,
       }}
       campaign={{
-        id: campaign.id,
         reward_threshold: campaign.reward_threshold,
         points_per_visit: campaign.points_per_visit,
         reward_label: campaign.reward_label,
       }}
       initialPoints={customer?.points_balance ?? 0}
       streakCount={streakCount}
-      recentVisits={recentVisits}
+      rewardCode={rewardCode}
     />
   );
 }

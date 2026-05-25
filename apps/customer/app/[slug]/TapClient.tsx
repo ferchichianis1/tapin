@@ -9,14 +9,13 @@ export interface TapClientProps {
   slug: string;
   merchant: { id: string; name: string; logo_url: string | null };
   campaign: {
-    id: string;
     reward_threshold: number;
     points_per_visit: number;
     reward_label: string;
   };
   initialPoints: number;
   streakCount: number;
-  recentVisits: string[];
+  rewardCode: string;
 }
 
 interface TapSuccessResponse {
@@ -55,16 +54,19 @@ const C = 2 * Math.PI * RADIUS;
 function ProgressRing({
   progress,
   threshold,
+  isComplete,
   pointsPop,
   onPopEnd,
 }: {
   progress: number;
   threshold: number;
+  isComplete: boolean;
   pointsPop: { count: number; key: number } | null;
   onPopEnd: () => void;
 }) {
   const clamped = Math.min(progress, threshold);
   const offset = C * (1 - (threshold > 0 ? clamped / threshold : 0));
+  const strokeColor = isComplete ? "#B8860B" : "#4f46e5";
 
   return (
     <div className="flex flex-col items-center gap-3">
@@ -91,7 +93,7 @@ function ProgressRing({
             cy={SIZE / 2}
             r={RADIUS}
             fill="none"
-            stroke="#4f46e5"
+            stroke={strokeColor}
             strokeWidth={STROKE}
             strokeLinecap="round"
             style={{
@@ -172,33 +174,41 @@ function RewardOverlay({
   );
 }
 
-// ─── Visit timeline ───────────────────────────────────────────────────────────
+// ─── Reward section ───────────────────────────────────────────────────────────
 
-function relativeDate(iso: string): string {
-  const diffDays = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7) return `${diffDays} days ago`;
-  if (diffDays < 14) return "Last week";
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-  return "A while ago";
-}
-
-function VisitTimeline({ dates }: { dates: string[] }) {
-  if (dates.length === 0) return null;
+function RewardSection({
+  rewardLabel,
+  rewardCode,
+  onReset,
+}: {
+  rewardLabel: string;
+  rewardCode: string;
+  onReset: () => void;
+}) {
   return (
-    <div className="w-full">
-      <p className="text-[10px] font-semibold tracking-[0.15em] text-stone-400 uppercase mb-2">
-        Your Visits
-      </p>
-      <div className="space-y-2">
-        {dates.map((d, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-stone-300 shrink-0" />
-            <span className="text-xs text-stone-400">{relativeDate(d)}</span>
-          </div>
-        ))}
+    <div className="w-full flex flex-col items-center gap-4">
+      <div className="w-full border-t border-b border-stone-100 py-4 flex flex-col items-center gap-1.5">
+        <p className="text-[10px] font-semibold tracking-widest text-[#B8860B] uppercase">
+          Your Reward
+        </p>
+        <p className="text-xl font-semibold text-stone-900">{rewardLabel}</p>
       </div>
+
+      <div className="flex flex-col items-center gap-1.5">
+        <p className="font-mono text-sm font-semibold tracking-[0.2em] bg-stone-100 px-4 py-2 rounded-lg text-stone-800">
+          {rewardCode}
+        </p>
+        <p className="text-[11px] text-stone-400 italic text-center">
+          Show this to staff
+        </p>
+      </div>
+
+      <button
+        onClick={onReset}
+        className="text-[11px] text-stone-300 text-center"
+      >
+        Already redeemed? Start new cycle →
+      </button>
     </div>
   );
 }
@@ -211,7 +221,7 @@ export default function TapClient({
   campaign,
   initialPoints,
   streakCount,
-  recentVisits,
+  rewardCode,
 }: TapClientProps) {
   const [currentPoints, setCurrentPoints] = useState(initialPoints);
   const [checking, setChecking] = useState(false);
@@ -278,6 +288,10 @@ export default function TapClient({
     setResultVisible(false);
   }
 
+  function handleResetCycle() {
+    setCurrentPoints(0);
+  }
+
   return (
     <>
       {/* Keyframe for the +N float-up animation */}
@@ -317,15 +331,18 @@ export default function TapClient({
           <ProgressRing
             progress={progressInCycle}
             threshold={campaign.reward_threshold}
+            isComplete={visitsRemaining === 0}
             pointsPop={pointsPop}
             onPopEnd={() => setPointsPop(null)}
           />
 
-          {/* Nudge banner */}
+          {/* Reward state / nudge banner */}
           {visitsRemaining === 0 ? (
-            <div className="w-full bg-indigo-50 border border-indigo-200 rounded-2xl px-4 py-3 text-sm text-indigo-700 font-medium text-center">
-              🎉 Reward ready — show this to staff
-            </div>
+            <RewardSection
+              rewardLabel={campaign.reward_label}
+              rewardCode={rewardCode}
+              onReset={handleResetCycle}
+            />
           ) : (
             <div className="w-full bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 text-sm text-amber-800 text-center">
               {visitsRemaining === 1
@@ -333,9 +350,6 @@ export default function TapClient({
                 : `${visitsRemaining} more visits for your ${campaign.reward_label}`}
             </div>
           )}
-
-          {/* Visit timeline */}
-          <VisitTimeline dates={recentVisits} />
 
           {/* Action */}
           <div className="w-full space-y-3">
