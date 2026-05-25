@@ -86,7 +86,7 @@ export default function MeClient({
       {/* Header */}
       <header className="px-6 pt-14 pb-8">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium tracking-[0.2em] text-stone-300 uppercase">
+          <span className="text-xs font-medium tracking-[0.2em] text-[#B8860B] uppercase">
             TapIn
           </span>
           <button
