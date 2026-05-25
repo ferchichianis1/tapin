@@ -53,13 +53,11 @@ const C = 2 * Math.PI * RADIUS;
 function ProgressRing({
   progress,
   threshold,
-  rewardLabel,
   pointsPop,
   onPopEnd,
 }: {
   progress: number;
   threshold: number;
-  rewardLabel: string;
   pointsPop: { count: number; key: number } | null;
   onPopEnd: () => void;
 }) {
@@ -125,10 +123,6 @@ function ProgressRing({
         )}
       </div>
 
-      <p className="text-sm text-stone-400 text-center">
-        visits to your free{" "}
-        <span className="text-stone-600 font-medium">{rewardLabel}</span>
-      </p>
     </div>
   );
 }
@@ -193,6 +187,7 @@ export default function TapClient({
   const [pointsPop, setPointsPop] = useState<{ count: number; key: number } | null>(null);
 
   const progressInCycle = currentPoints % campaign.reward_threshold;
+  const visitsRemaining = campaign.reward_threshold - progressInCycle;
 
   async function handleCheckIn() {
     if (checking) return;
@@ -288,10 +283,22 @@ export default function TapClient({
           <ProgressRing
             progress={progressInCycle}
             threshold={campaign.reward_threshold}
-            rewardLabel={campaign.reward_label}
             pointsPop={pointsPop}
             onPopEnd={() => setPointsPop(null)}
           />
+
+          {/* Nudge banner */}
+          {visitsRemaining === 0 ? (
+            <div className="w-full bg-indigo-50 border border-indigo-200 rounded-2xl px-4 py-3 text-sm text-indigo-700 font-medium text-center">
+              🎉 Reward ready — show this to staff
+            </div>
+          ) : (
+            <div className="w-full bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 text-sm text-amber-800 text-center">
+              {visitsRemaining === 1
+                ? `1 more visit for your ${campaign.reward_label}`
+                : `${visitsRemaining} more visits for your ${campaign.reward_label}`}
+            </div>
+          )}
 
           {/* Action */}
           <div className="w-full space-y-3">
