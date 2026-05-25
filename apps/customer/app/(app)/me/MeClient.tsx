@@ -116,6 +116,13 @@ export default function MeClient({
             ))}
           </div>
         )}
+
+        <div className="flex items-center justify-center gap-2 mt-6">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4d3cc" strokeWidth="1.5" strokeLinecap="round">
+            <path d="M6.5 6.5a7 7 0 0 0 0 11M17.5 6.5a7 7 0 0 1 0 11M3 12h.01M21 12h.01M12 3v.01M12 21v.01"/>
+          </svg>
+          <span className="text-xs text-stone-300">Tap a TapIn stand to add a new store</span>
+        </div>
       </main>
 
     </div>
