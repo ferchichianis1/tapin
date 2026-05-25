@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -16,7 +16,7 @@ export interface TapClientProps {
   };
   initialPoints: number;
   streakCount: number;
-  customerId: string | null;
+  recentVisits: string[];
 }
 
 interface TapSuccessResponse {
@@ -211,7 +211,7 @@ export default function TapClient({
   campaign,
   initialPoints,
   streakCount,
-  customerId,
+  recentVisits,
 }: TapClientProps) {
   const [currentPoints, setCurrentPoints] = useState(initialPoints);
   const [checking, setChecking] = useState(false);
@@ -219,23 +219,6 @@ export default function TapClient({
   const [resultVisible, setResultVisible] = useState(false);
   const [showReward, setShowReward] = useState(false);
   const [pointsPop, setPointsPop] = useState<{ count: number; key: number } | null>(null);
-  const [recentVisits, setRecentVisits] = useState<string[]>([]);
-
-  useEffect(() => {
-    if (!customerId) return;
-    supabase
-      .from("visits")
-      .select("created_at")
-      .eq("customer_id", customerId)
-      .eq("campaign_id", campaign.id)
-      .eq("rejected", false)
-      .order("created_at", { ascending: false })
-      .limit(5)
-      .then(({ data, error }) => {
-        console.log("[VisitTimeline] customerId:", customerId, "data:", data, "error:", error);
-        if (data) setRecentVisits(data.map((v: { created_at: string }) => v.created_at));
-      });
-  }, [customerId, campaign.id]);
 
   const progressInCycle = currentPoints % campaign.reward_threshold;
   const visitsRemaining = campaign.reward_threshold - progressInCycle;

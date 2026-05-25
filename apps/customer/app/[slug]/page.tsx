@@ -91,16 +91,28 @@ export default async function SlugPage({
     .maybeSingle();
 
   let streakCount = 0;
+  let recentVisits: string[] = [];
   if (customer) {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const { count } = await supabaseAdmin
-      .from("visits")
-      .select("id, nfc_codes!inner(merchant_id)", { count: "exact", head: true })
-      .eq("customer_id", customer.id)
-      .eq("nfc_codes.merchant_id", merchant.id)
-      .eq("rejected", false)
-      .gte("created_at", sevenDaysAgo);
+    const [{ count }, { data: visitRows }] = await Promise.all([
+      supabaseAdmin
+        .from("visits")
+        .select("id, nfc_codes!inner(merchant_id)", { count: "exact", head: true })
+        .eq("customer_id", customer.id)
+        .eq("nfc_codes.merchant_id", merchant.id)
+        .eq("rejected", false)
+        .gte("created_at", sevenDaysAgo),
+      supabaseAdmin
+        .from("visits")
+        .select("created_at")
+        .eq("customer_id", customer.id)
+        .eq("campaign_id", campaign.id)
+        .eq("rejected", false)
+        .order("created_at", { ascending: false })
+        .limit(5),
+    ]);
     streakCount = count ?? 0;
+    recentVisits = (visitRows ?? []).map((v) => v.created_at as string);
   }
 
   return (
@@ -119,7 +131,7 @@ export default async function SlugPage({
       }}
       initialPoints={customer?.points_balance ?? 0}
       streakCount={streakCount}
-      customerId={customer?.id ?? null}
+      recentVisits={recentVisits}
     />
   );
 }
