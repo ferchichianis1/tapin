@@ -9,6 +9,7 @@ export interface TapClientProps {
   slug: string;
   merchant: { id: string; name: string; logo_url: string | null };
   campaign: {
+    id: string;
     reward_threshold: number;
     points_per_visit: number;
     reward_label: string;
@@ -224,16 +225,17 @@ export default function TapClient({
     if (!customerId) return;
     supabase
       .from("visits")
-      .select("created_at, nfc_codes!inner(merchant_id)")
+      .select("created_at")
       .eq("customer_id", customerId)
-      .eq("nfc_codes.merchant_id", merchant.id)
+      .eq("campaign_id", campaign.id)
       .eq("rejected", false)
       .order("created_at", { ascending: false })
       .limit(5)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        console.log("[VisitTimeline] customerId:", customerId, "data:", data, "error:", error);
         if (data) setRecentVisits(data.map((v: { created_at: string }) => v.created_at));
       });
-  }, [customerId, merchant.id]);
+  }, [customerId, campaign.id]);
 
   const progressInCycle = currentPoints % campaign.reward_threshold;
   const visitsRemaining = campaign.reward_threshold - progressInCycle;

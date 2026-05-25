@@ -60,7 +60,7 @@ export default async function SlugPage({
   const now = new Date().toISOString();
   const { data: campaign } = await supabaseAdmin
     .from("campaigns")
-    .select("reward_threshold, points_per_visit, reward_label")
+    .select("id, reward_threshold, points_per_visit, reward_label")
     .eq("merchant_id", merchant.id)
     .eq("is_active", true)
     .lte("starts_at", now)
@@ -112,6 +112,7 @@ export default async function SlugPage({
         logo_url: merchant.logo_url ?? null,
       }}
       campaign={{
+        id: campaign.id,
         reward_threshold: campaign.reward_threshold,
         points_per_visit: campaign.points_per_visit,
         reward_label: campaign.reward_label,
