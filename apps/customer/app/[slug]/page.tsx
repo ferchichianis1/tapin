@@ -60,7 +60,7 @@ export default async function SlugPage({
   const now = new Date().toISOString();
   const { data: campaign } = await supabaseAdmin
     .from("campaigns")
-    .select("reward_threshold, points_per_visit, reward_label")
+    .select("id, reward_threshold, points_per_visit, reward_label")
     .eq("merchant_id", merchant.id)
     .eq("is_active", true)
     .lte("starts_at", now)
@@ -99,9 +99,9 @@ export default async function SlugPage({
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const { count } = await supabaseAdmin
       .from("visits")
-      .select("id, nfc_codes!inner(merchant_id)", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("customer_id", customer.id)
-      .eq("nfc_codes.merchant_id", merchant.id)
+      .eq("campaign_id", campaign.id)
       .eq("rejected", false)
       .gte("created_at", sevenDaysAgo);
     streakCount = count ?? 0;

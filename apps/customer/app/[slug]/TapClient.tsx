@@ -230,7 +230,10 @@ export default function TapClient({
   const [showReward, setShowReward] = useState(false);
   const [pointsPop, setPointsPop] = useState<{ count: number; key: number } | null>(null);
 
-  const progressInCycle = currentPoints % campaign.reward_threshold;
+  const rawProgress = currentPoints % campaign.reward_threshold;
+  const progressInCycle = rawProgress === 0 && currentPoints > 0
+    ? campaign.reward_threshold
+    : rawProgress;
   const visitsRemaining = campaign.reward_threshold - progressInCycle;
 
   async function handleCheckIn() {
